@@ -1,7 +1,7 @@
 //
 // Forms
 // --------------------------------------------------
-
+.editable-container {
 
 // Normalize non-controls
 //
@@ -414,4 +414,5 @@ input[type="checkbox"],
     top: 0;
     right: ($grid-gutter-width / 2);
   }
+}
 }

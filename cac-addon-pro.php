@@ -1,13 +1,15 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+} // Exit if accessed directly
 
 /**
  * The Admin Columns Pro plugin class
  *
  * @since 1.0
  */
-class CAC_Addon_Pro {
+final class CAC_Addon_Pro {
 
 	/**
 	 * Basename of the plugin, retrieved through plugin_basename function
@@ -31,6 +33,24 @@ class CAC_Addon_Pro {
 	 * @since 3.6
 	 */
 	private $network_settings_page;
+
+	private $_import_export;
+
+	/**
+	 * @since 3.8
+	 */
+	protected static $_instance = null;
+
+	/**
+	 * @since 3.8
+	 */
+	public static function instance() {
+		if ( is_null( self::$_instance ) ) {
+			self::$_instance = new self();
+		}
+
+		return self::$_instance;
+	}
 
 	/**
 	 * @since 1.0
@@ -62,9 +82,9 @@ class CAC_Addon_Pro {
 	 */
 	public function define_constants() {
 
-		define( 'CAC_PRO_VERSION', 	ACP_VERSION );
-		define( 'CAC_PRO_URL', 		plugin_dir_url( __FILE__ ) );
-		define( 'CAC_PRO_DIR', 		plugin_dir_path( __FILE__ ) );
+		define( 'CAC_PRO_VERSION', ACP_VERSION );
+		define( 'CAC_PRO_URL', plugin_dir_url( __FILE__ ) );
+		define( 'CAC_PRO_DIR', plugin_dir_path( __FILE__ ) );
 	}
 
 	/**
@@ -90,6 +110,7 @@ class CAC_Addon_Pro {
 		 * Use this for setting up addon functionality
 		 *
 		 * @since 2.0
+		 *
 		 * @param CPAC $cpac_instance Main Admin Columns plugin class instance
 		 */
 		do_action( 'cac/pro/loaded', $this );
@@ -102,32 +123,33 @@ class CAC_Addon_Pro {
 	 */
 	public function init() {
 
-		if ( ! class_exists( 'CAC_Export_Import', false ) ) {
-			include_once 'classes/export-import/export-import.php';
-		}
-
 		if ( ! class_exists( 'CAC_Addon_Filtering', false ) ) {
-			include_once 'classes/filtering/filtering.php';
+			include_once CAC_PRO_DIR . 'classes/filtering/filtering.php';
 		}
 
 		if ( ! class_exists( 'CAC_Addon_Sortable', false ) ) {
-			include_once 'classes/sortable/sortable.php';
+			include_once CAC_PRO_DIR . 'classes/sortable/sortable.php';
 		}
 
 		if ( ! class_exists( 'CAC_Storage_Model_Taxonomy', false ) ) {
-			include_once 'classes/taxonomy/taxonomy.php';
+			include_once CAC_PRO_DIR . 'classes/taxonomy/taxonomy.php';
 		}
 
 		if ( ! class_exists( 'CPAC_Storage_Model_MS_User', false ) ) {
-			include_once 'classes/ms-user/ms-user.php';
+			include_once CAC_PRO_DIR . 'classes/ms-user/ms-user.php';
 		}
 
 		if ( ! class_exists( 'CACIE_Addon_InlineEdit', false ) ) {
-			include_once 'classes/inline-edit/cac-addon-inline-edit.php';
+			include_once CAC_PRO_DIR . 'classes/inline-edit/cac-addon-inline-edit.php';
 		}
 
 		if ( ! class_exists( 'CACIE_Addon_Columns', false ) ) {
-			include_once 'classes/columns/cac-addon-columns.php';
+			include_once CAC_PRO_DIR . 'classes/columns/cac-addon-columns.php';
+		}
+
+		if ( ! class_exists( 'CAC_Export_Import', false ) ) {
+			include_once CAC_PRO_DIR . 'classes/export-import/export-import.php';
+			$this->_import_export = new CAC_Export_Import();
 		}
 	}
 
@@ -137,9 +159,9 @@ class CAC_Addon_Pro {
 	 * @since 3.4.1
 	 */
 	public function third_party() {
-
-		include_once 'classes/third-party/bbpress.php';
-		include_once 'classes/third-party/wordpress-seo.php';
+		include_once CAC_PRO_DIR . 'classes/third-party/bbpress.php';
+		include_once CAC_PRO_DIR . 'classes/third-party/pods.php';
+		include_once CAC_PRO_DIR . 'classes/third-party/wordpress-seo.php';
 	}
 
 	/**
@@ -149,9 +171,9 @@ class CAC_Addon_Pro {
 	 */
 	public function init_after_cac_loaded( $cpac ) {
 
-		if ( ! class_exists('Codepress_Licence_Manager_Settings') ) {
+		if ( ! class_exists( 'Codepress_Licence_Manager_Settings', false ) ) {
 
-			include_once 'classes/licence-manager-settings.php';
+			include_once CAC_PRO_DIR . 'classes/licence-manager-settings.php';
 
 			// When used into Admin Columns Pro use it's root path...
 			$this->licence_manager = new Codepress_Licence_Manager_Settings( ACP_FILE, $cpac, $this );
@@ -159,7 +181,17 @@ class CAC_Addon_Pro {
 			if ( defined( 'ACP_LICENCE' ) ) {
 				$this->licence_manager->set_licence_key( ACP_LICENCE );
 			}
+
+			include_once 'classes/layouts/layouts.php';
+			$this->profiles = new CAC_Layouts( $cpac );
 		}
+	}
+
+	/**
+	 * @since 3.8
+	 */
+	public function import_export() {
+		return $this->_import_export;
 	}
 
 	/**
@@ -172,7 +204,8 @@ class CAC_Addon_Pro {
 			return $links;
 		}
 
-		array_unshift( $links, '<a href="' . admin_url("options-general.php") . '?page=codepress-admin-columns&tab=settings">' . __( 'Settings' ) . '</a>' );
+		array_unshift( $links, '<a href="' . admin_url( "options-general.php" ) . '?page=codepress-admin-columns&tab=settings">' . __( 'Settings' ) . '</a>' );
+
 		return $links;
 	}
 
@@ -182,7 +215,6 @@ class CAC_Addon_Pro {
 	 * @since 1.0.3
 	 */
 	public function is_cpac_enabled() {
-
 		return class_exists( 'CPAC', false );
 	}
 
@@ -210,7 +242,10 @@ class CAC_Addon_Pro {
 	 */
 	public function network_settings_menu() {
 
-		$this->network_settings_page = add_submenu_page( 'settings.php', __( 'Admin Columns Settings', 'codepress-admin-columns' ), __( 'Admin Columns', 'codepress-admin-columns' ), 'manage_admin_columns', 'codepress-admin-columns', array( $this, 'network_display' ), false, 98 );
+		$this->network_settings_page = add_submenu_page( 'settings.php', __( 'Admin Columns Settings', 'codepress-admin-columns' ), __( 'Admin Columns', 'codepress-admin-columns' ), 'manage_admin_columns', 'codepress-admin-columns', array(
+			$this,
+			'network_display'
+		) );
 	}
 
 	/**
@@ -221,48 +256,53 @@ class CAC_Addon_Pro {
 	public function network_display() {
 
 		if ( $groups = apply_filters( 'cac/network_settings/groups', array() ) ) : ?>
-		<div id="cpac" class="wrap">
-			<h1>Admin Columns</h1>
+			<div id="cpac" class="wrap">
+				<h1>Admin Columns</h1>
 
-			<table class="form-table cpac-form-table settings">
-				<tbody>
+				<table class="form-table cpac-form-table settings">
+					<tbody>
 
-				<?php
-				if ( $groups ) :
-					foreach ( $groups as $id => $group ) :
+					<?php
+					if ( $groups ) :
+						foreach ( $groups as $id => $group ) :
 
-						$defaults = array(
-							'title' => '',
-							'description' => '',
-						);
+							$defaults = array(
+								'title' => '',
+								'description' => '',
+							);
 
-						$group = (object) array_merge( $defaults, $group );
-						?>
+							$group    = (object) array_merge( $defaults, $group );
+							?>
 							<tr>
 								<th scope="row">
 									<h3><?php echo $group->title; ?></h3>
+
 									<p><?php echo $group->description; ?></p>
 								</th>
 								<td class="padding-22">
 									<?php
-										// Use this Hook to add additonal fields to the group
-										do_action( "cac/settings/groups/row={$id}" );
+									// Use this Hook to add additonal fields to the group
+									do_action( "cac/settings/groups/row={$id}" );
 									?>
 								</td>
 							</tr>
-						<?php
-					endforeach;
-				endif;
-				?>
+							<?php
+						endforeach;
+					endif;
+					?>
 
-				</tbody>
-			</table>
+					</tbody>
+				</table>
 
-		</div>
+			</div>
 
-		<?php
+			<?php
 		endif;
 	}
 }
 
-new CAC_Addon_Pro();
+function ac_pro() {
+	return CAC_Addon_Pro::instance();
+}
+
+ac_pro();

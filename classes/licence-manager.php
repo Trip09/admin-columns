@@ -1,7 +1,5 @@
 <?php
 
-//set_site_transient( 'update_plugins', null );
-
 if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 	/**
@@ -19,7 +17,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		 * Endpoint to access API over plain http
 		 *
 		 * @since 3.1.2
-		 * @var type string
+		 * @var $nossl_endpoint string
 		 */
 		private $nossl_endpoint;
 
@@ -34,7 +32,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		 * API object
 		 *
 		 * @since 1.1
-		 * @var type ACP_API
+		 * @var $api ACP_API
 		 */
 		public $api;
 
@@ -54,6 +52,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 		/**
 		 * @since 1.0
+		 *
 		 * @param array $args [api_url, option_key, file, name, version]
 		 */
 		public function __construct( $file_path ) {
@@ -65,7 +64,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 			$this->set_api();
 
 			// reflect API settings within the update request
-			add_filter( 'http_request_args', array( $this, 'use_api_http_request_args_for_plugin_update'), 10, 2 );
+			add_filter( 'http_request_args', array( $this, 'use_api_http_request_args_for_plugin_update' ), 10, 2 );
 
 			// Hook into WP update process
 			add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'update_check' ) );
@@ -122,7 +121,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 			// change the scheme to access the API via http
 			if ( ! apply_filters( 'cac/api/secure', true ) ) {
-				$url =  set_url_scheme( $url, 'http' ) . '/' . $this->nossl_endpoint;
+				$url = set_url_scheme( $url, 'http' ) . '/' . $this->nossl_endpoint;
 			}
 
 			$this->api
@@ -134,8 +133,10 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		 * Tries to match API settings with the update request
 		 *
 		 * @since 3.1.2
+		 *
 		 * @param array $r
 		 * @param string $url
+		 *
 		 * @return array
 		 */
 		public function use_api_http_request_args_for_plugin_update( $r, $url ) {
@@ -190,7 +191,9 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 		/**
 		 * @since 1.0
+		 *
 		 * @param string $licence_key Licence Key
+		 *
 		 * @return object Response
 		 */
 		public function activate_licence( $licence_key ) {
@@ -218,7 +221,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		}
 
 		/**
-		 * @todo add for other add-ons
+		 * TODO add for other add-ons
 		 */
 		public function purge_plugin_transients() {
 
@@ -229,7 +232,6 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 		/**
 		 * @since 1.0
-		 * @return void
 		 */
 		public function deactivate_licence() {
 
@@ -283,7 +285,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 			// no cache, get data
 			if ( ! $plugin_install ) {
-				$plugin_install = $this->api->get_plugin_install_data( $this->get_licence_key(), $plugin_name, null );
+				$plugin_install = $this->api->get_plugin_install_data( $this->get_licence_key(), $plugin_name );
 
 				// flatten wp_error object for transient storage
 				if ( is_wp_error( $plugin_install ) ) {
@@ -370,7 +372,8 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		 *
 		 * @uses api_request()
 		 *
-		 * @param array $transient Update array build by Wordpress.
+		 * @param object $transient Update array build by Wordpress.
+		 *
 		 * @return array Modified update array with custom plugin data.
 		 */
 		public function update_check( $transient ) {
@@ -428,11 +431,11 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		}
 
 		public function get_version() {
-			return $this->get_plugin_info('Version');
+			return $this->get_plugin_info( 'Version' );
 		}
 
 		public function get_name() {
-			return $this->get_plugin_info('Name');
+			return $this->get_plugin_info( 'Name' );
 		}
 
 		/**
@@ -447,7 +450,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 		protected function update_option( $option, $value, $autoload = false ) {
 			return $this->is_network_managed_license()
-				? update_site_option( $option, $value, $autoload )
+				? update_site_option( $option, $value )
 				: update_option( $option, $value, $autoload );
 		}
 
@@ -464,7 +467,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		}
 
 		public function get_masked_licence_key() {
-			return str_repeat ( '*', 28 ) . substr( $this->get_licence_key(), -4 );
+			return str_repeat( '*', 28 ) . substr( $this->get_licence_key(), - 4 );
 		}
 
 		public function get_licence_key() {
@@ -477,6 +480,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 		public function is_license_active() {
 			$status = $this->get_licence_status();
+
 			return true === $status || '1' === $status || 'active' === $status;
 		}
 
@@ -552,6 +556,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 		public function is_license_expired() {
 			$days = $this->get_days_to_expiry();
+
 			return false !== $days && $days <= 0;
 		}
 
@@ -559,6 +564,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		 * Flatten WP_Error object for storage in transient
 		 *
 		 * @param object $wp_error WP_Error object
+		 *
 		 * @return $error Error Object
 		 */
 		public function flatten_wp_error( $wp_error ) {
@@ -566,10 +572,10 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 
 			if ( is_wp_error( $wp_error ) ) {
 				$error = (object) array(
-					'error' 	=> 1,
-					'time' 	 	=> time(),
-					'code'  	=> $wp_error->get_error_code(),
-					'message' 	=> $wp_error->get_error_message(),
+					'error'   => 1,
+					'time'    => time(),
+					'code'    => $wp_error->get_error_code(),
+					'message' => $wp_error->get_error_message(),
 				);
 			}
 
@@ -580,6 +586,7 @@ if ( ! class_exists( 'Codepress_Licence_Manager' ) ) {
 		 * Maybe unflatten error
 		 *
 		 * @param mixed $maybe_error stdClass
+		 *
 		 * @return $wp_error WP_Error Object
 		 */
 		public function maybe_unflatten_wp_error( $maybe_error ) {

@@ -9,7 +9,7 @@
 
 // Overwrite variables
 $zindex-popover: 9999;
-
+$btn-primary-bg: #0085ba;
 
 
 // Reset
@@ -124,9 +124,6 @@ $color-wp-yellow-light: #fffbcc;
  */
 // Quick inline: button
 #cacie-toggle-edit {
-	top: 0;
-	display: inline-block;
-	vertical-align: bottom;
 
 	&:after {
 		content: "\f119";
@@ -336,6 +333,25 @@ $color-wp-yellow-light: #fffbcc;
 			z-index: 100;
 		}
 	}
+
+	.cac-subfield {
+		display: inline-block;
+		margin-right: 8px;
+		margin-bottom: 8px;
+
+		&.cac-subfield-comma {
+			display: inline-block;
+			margin-right: 0;
+			margin-bottom: 0;
+		}
+		&.cac-subfield-newline {
+			display: block;
+			margin: 0;
+		}
+
+	}
+
+
 }
 
 
@@ -366,10 +382,20 @@ $color-wp-yellow-light: #fffbcc;
 	}
 }
 
+
+
 /**
  * Inline edit
  * ----------------------------------------------------------------------------
  */
+.editable-container {
+	.btn.btn-primary {
+		&:hover {
+			background: #008ec2;
+			border-color: #006799;
+		}
+	}
+}
 .editable-input {
 	label {
 		margin: 4px 0;
@@ -388,9 +414,60 @@ $color-wp-yellow-light: #fffbcc;
 	.small-text {
 		width: 65px;
 	}
+
+
 }
 
 .select2-drop {
 	//z-index: $zindex-modal;
 	z-index: 9999;
+}
+
+@media screen and (max-width: 782px) {
+	.wp-list-table #the-list {
+		.is-expanded td.cacie-editable-container {
+			overflow: visible;
+			min-height: 30px;
+
+			.editable-container.popover {
+				position: relative;
+				margin-left: calc( -30vw );
+				width: calc(85vw - 30px);
+				left: 0!important;
+
+				.arrow {
+					display: none;
+				}
+				.editable-input {
+					width: 100%;
+
+					.select2-container {
+						width: 100%!important;
+					}
+				}
+				.editable-buttons {
+					clear: both;
+					display: block;
+					margin-left: 0; margin-top: 7px;
+				}
+
+				+ .cacie-cell-actions {
+					display: none!important;
+				}
+
+
+			}
+
+			&.column-attachment.cacie-nonempty {
+				.cacie-cell-actions {
+					position: relative;
+					left: 0;
+					top: 0;
+					float: none;
+				}
+			}
+		}
+	}
+
+
 }
